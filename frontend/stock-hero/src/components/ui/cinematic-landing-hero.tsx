@@ -1,5 +1,6 @@
 "use client";
 
+import { Link } from "react-router-dom";
 import React, { useEffect, useRef } from "react";
 import { gsap } from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
@@ -179,7 +180,8 @@ export interface CinematicHeroProps extends React.HTMLAttributes<HTMLDivElement>
   ctaHeading?: string;
   ctaDescription?: string;
 }
-
+// Where the auth app (stock-signup) runs. Override with VITE_AUTH_URL in production.
+const AUTH_URL: string = import.meta.env.VITE_AUTH_URL ?? "http://localhost:5174";
 export function CinematicHero({ 
   brandName = "StockTrade",
   tagline1 = "From curious beginner,",
@@ -329,7 +331,7 @@ export function CinematicHero({
           {ctaDescription}
         </p>
         <div className="flex flex-col sm:flex-row gap-6">
-          <a href="#" aria-label="Download on the App Store" className="btn-modern-light flex items-center justify-center gap-3 px-8 py-4 rounded-[1.25rem] group focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">
+          <Link to="/auth?mode=signup" aria-label="SignUp" className="btn-modern-light flex items-center justify-center gap-3 px-8 py-4 rounded-[1.25rem] group focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">
             {/* Authentic Apple App Store Logo SVG */}
             <i
               className="fa-solid fa-user-plus text-xl w-7 text-center
@@ -341,8 +343,8 @@ export function CinematicHero({
               <div className="text-[10px] font-bold tracking-wider text-neutral-500 uppercase mb-[-2px]">Create free account</div>
               <div className="text-xl font-bold leading-none tracking-tight">SignUp</div>
             </div>
-          </a>
-          <a href="#" aria-label="Get it on Google Play" className="btn-modern-dark flex items-center justify-center gap-3 px-8 py-4 rounded-[1.25rem] group focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-background">
+          </Link>
+          <Link to="/auth?mode=login" aria-label="LogIn" className="btn-modern-dark flex items-center justify-center gap-3 px-8 py-4 rounded-[1.25rem] group focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-background">
             {/* Authentic Google Play Store Solid Logo SVG */}
             <i
               className="fa-solid fa-right-to-bracket text-xl w-7 text-center
@@ -353,7 +355,7 @@ export function CinematicHero({
               <div className="text-[10px] font-bold tracking-wider text-neutral-400 uppercase mb-[-2px]">Already have an account?</div>
               <div className="text-xl font-bold leading-none tracking-tight">LogIn</div>
             </div>
-          </a>
+          </Link>
         </div>
       </div>
 

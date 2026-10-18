@@ -12,8 +12,13 @@ const wait = (ms: number) => new Promise<void>((r) => setTimeout(r, ms));
 type Step = "login" | "signup" | "verify";
 const BARE = "max-w-none rounded-none bg-transparent p-0 shadow-none ring-0 sm:p-0";
 
+function getInitialStep(): Step {
+  const mode = new URLSearchParams(window.location.search).get("mode");
+  return mode === "signup" ? "signup" : "login";
+}
+
 function App() {
-  const [step, setStep] = React.useState<Step>("login");
+  const [step, setStep] = React.useState<Step>(getInitialStep);
   return (
     <div className="flex min-h-screen w-full items-center justify-center bg-background p-6">
       <div className="grid w-full max-w-[820px] min-w-0 overflow-hidden rounded-[20px] [corner-shape:squircle] bg-card shadow-sm ring-1 ring-border sm:grid-cols-[300px_minmax(0,1fr)]">
