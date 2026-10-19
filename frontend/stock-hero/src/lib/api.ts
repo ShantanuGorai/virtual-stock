@@ -4,14 +4,14 @@ export interface AuthUser {
   email: string;
 }
 
-async function request<T>(path: string, body?: unknown): Promise<T> {
+async function request<T>(method: "GET" | "POST", path: string, body?: unknown): Promise<T> {
   let res: Response;
   try {
-    res = await fetch(`/api/auth${path}`, {
-      method: "POST",
+    res = await fetch(`/api${path}`, {
+      method,
       headers: { "Content-Type": "application/json" },
       credentials: "include",
-      body: JSON.stringify(body ?? {}),
+      body: method === "POST" ? JSON.stringify(body ?? {}) : undefined,
     });
   } catch {
     throw new Error("Cannot reach the server. Check that the backend is running.");
@@ -23,9 +23,13 @@ async function request<T>(path: string, body?: unknown): Promise<T> {
 
 export const api = {
   signup: (v: { name: string; email: string; password: string }) =>
-    request<{ message: string; email: string }>("/signup", v),
-  verify: (email: string, code: string) => request<{ user: AuthUser }>("/verify", { email, code }),
-  resend: (email: string) => request<{ message: string }>("/resend", { email }),
+    request<{ message: string; email: string }>("POST", "/auth/signup", v),
+  verify: (email: string, code: string) => request<{ user: AuthUser }>("POST", "/auth/verify", { email, code }),
+  resend: (email: string) => request<{ message: string }>("POST", "/auth/resend", { email }),
   login: (v: { email: string; password: string; remember: boolean }) =>
-    request<{ user: AuthUser }>("/login", v),
+    request<{ user: AuthUser }>("POST", "/auth/login", v),
+  me: () => request<{ user: AuthUser }>("GET", "/auth/me"),
+  logout: () => request<{ message: string }>("POST", "/auth/logout"),
+  rewardStatus: () => request<{ claimed: boolean }>("GET", "/reward/status"),
+  claimReward: () => request<{ claimed: boolean }>("POST", "/reward/claim"),
 };

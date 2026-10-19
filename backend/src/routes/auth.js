@@ -8,12 +8,14 @@ const User = require("../models/User");
 const PendingSignup = require("../models/PendingSignup");
 const { sendVerificationEmail } = require("../utils/mailer");
 const requireAuth = require("../middleware/requireAuth");
+const { canonicalEmail } = require("../utils/emailKey");
 
 const router = express.Router();
 
 const CODE_TTL_MINUTES = 10;
 const RESEND_COOLDOWN_SECONDS = 30;
 const MAX_CODE_ATTEMPTS = 5;
+const SESSION_DAYS = 15;
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 router.use(
@@ -43,15 +45,16 @@ function safeEqual(a, b) {
   return x.length === y.length && crypto.timingSafeEqual(x, y);
 }
 
-function setSession(res, user, remember) {
+// Stay signed in for 15 days (cookie and token both expire then).
+function setSession(res, user) {
   const token = jwt.sign({ sub: String(user._id) }, process.env.JWT_SECRET, {
-    expiresIn: remember ? "30d" : "1d",
+    expiresIn: `${SESSION_DAYS}d`,
   });
   res.cookie("token", token, {
     httpOnly: true,
     sameSite: "lax",
     secure: process.env.NODE_ENV === "production",
-    ...(remember ? { maxAge: 30 * 24 * 60 * 60 * 1000 } : {}),
+    maxAge: SESSION_DAYS * 24 * 60 * 60 * 1000,
   });
 }
 
@@ -93,7 +96,7 @@ router.post(
     if (password.length < 8 || password.length > 72)
       return res.status(400).json({ message: "Password must be 8 to 72 characters long." });
 
-    if (await User.exists({ email }))
+    if (await User.exists({ $or: [{ email }, { canonicalEmail: canonicalEmail(email) }] }))
       return res.status(409).json({ message: "An account with this email already exists. Sign in instead." });
 
     let pending = await PendingSignup.findOne({ email });
@@ -157,14 +160,20 @@ router.post(
 
     let user;
     try {
-      user = await User.create({ name: pending.name, email, passwordHash: pending.passwordHash, emailVerified: true });
+      user = await User.create({
+        name: pending.name,
+        email,
+        canonicalEmail: canonicalEmail(email),
+        passwordHash: pending.passwordHash,
+        emailVerified: true,
+      });
     } catch (err) {
       if (err.code === 11000) return res.status(409).json({ message: "An account with this email already exists. Sign in instead." });
       throw err;
     }
     await PendingSignup.deleteOne({ _id: pending._id });
 
-    setSession(res, user, false);
+    setSession(res, user);
     res.status(201).json({ user: publicUser(user) });
   })
 );
@@ -175,13 +184,18 @@ router.post(
   wrap(async (req, res) => {
     const email = normEmail(req.body.email);
     const password = String(req.body.password || "");
-    const remember = Boolean(req.body.remember);
 
     const user = await User.findOne({ email });
     const ok = user && (await bcrypt.compare(password, user.passwordHash));
     if (!ok) return res.status(401).json({ message: "That email and password don't match. Try again or reset your password." });
 
-    setSession(res, user, remember);
+    // Accounts created before canonicalEmail existed get it filled in on their next login
+    if (!user.canonicalEmail) {
+      user.canonicalEmail = canonicalEmail(user.email);
+      await user.save().catch(() => {});
+    }
+
+    setSession(res, user);
     res.json({ user: publicUser(user) });
   })
 );

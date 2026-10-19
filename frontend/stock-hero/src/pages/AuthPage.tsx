@@ -18,6 +18,17 @@ export default function AuthPage() {
   React.useEffect(() => {
     setStep(stepFromMode(params.get("mode")));
   }, [params]);
+
+  // Already signed in (the login lasts 15 days)? Skip this page and go to the reward.
+  const [checking, setChecking] = React.useState(true);
+  React.useEffect(() => {
+    api
+      .me()
+      .then(() => navigate("/reward", { replace: true }))
+      .catch(() => setChecking(false));
+  }, [navigate]);
+  if (checking) return null;
+
   return (
     <div className="flex min-h-screen w-full items-center justify-center bg-background p-6">
       <div className="grid w-full max-w-[820px] min-w-0 overflow-hidden rounded-[20px] [corner-shape:squircle] bg-card shadow-sm ring-1 ring-border sm:grid-cols-[300px_minmax(0,1fr)]">
@@ -56,7 +67,7 @@ export default function AuthPage() {
             <AuthCard level={2} className={BARE} title="Welcome back" description="Sign in to your workspace">
               <LoginForm forgotHref="#" signupHref="#" onSignupClick={() => setStep("signup")} onSubmit={async (v) => {
                   await api.login(v);
-                  navigate("/");
+                  navigate("/reward");
                 }} />
             </AuthCard>
           )}
@@ -75,7 +86,7 @@ export default function AuthPage() {
                 destination={pendingEmail}
                 onVerify={async (code) => {
                   await api.verify(pendingEmail, code);
-                  navigate("/");
+                  navigate("/reward");
                 }}
                 onResend={async () => {
                   await api.resend(pendingEmail);
