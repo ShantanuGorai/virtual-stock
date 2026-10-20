@@ -8,40 +8,46 @@ import { api } from '@/lib/api';
 export default function RewardPage() {
   const navigate = useNavigate();
   const { width, height } = useWindowSize();
-  // loading -> checking with the server, available -> can claim, claimed -> already used
-  const [state, setState] = React.useState<'loading' | 'available' | 'claimed'>('loading');
-  const [isUnlocked, setIsUnlocked] = React.useState(false);
+  // loading -> asking the server, available -> reward can still be claimed
+  const [state, setState] = React.useState<'loading' | 'available'>('loading');
+  const [isClaimed, setIsClaimed] = React.useState(false);
+  const [claiming, setClaiming] = React.useState(false);
   const [error, setError] = React.useState('');
-  const [attempt, setAttempt] = React.useState(0); // changing it resets the slider
+  const timer = React.useRef<number | undefined>(undefined);
 
   React.useEffect(() => {
     api
       .rewardStatus()
-      .then((r) => setState(r.claimed ? 'claimed' : 'available'))
+      // Reward already claimed on this Gmail: go straight to the dashboard
+      .then((r) => (r.claimed ? navigate('/dashboard', { replace: true }) : setState('available')))
       .catch((e: Error) => {
         setError(e.message);
         setState('available');
       });
-  }, []);
+    return () => window.clearTimeout(timer.current);
+  }, [navigate]);
 
-  // The server decides. The gift only shows after the server accepts the claim.
-  const handleUnlock = async () => {
+  // Clicking the gift claims it on the server, then opens the dashboard.
+  const handleClaim = async () => {
+    if (claiming || isClaimed) return;
+    setClaiming(true);
     setError('');
     try {
       await api.claimReward();
-      setIsUnlocked(true);
+      setIsClaimed(true); // confetti
+      timer.current = window.setTimeout(() => navigate('/dashboard'), 1800);
     } catch (e) {
       try {
         const r = await api.rewardStatus();
         if (r.claimed) {
-          setState('claimed');
+          navigate('/dashboard', { replace: true });
           return;
         }
       } catch {
         /* fall through to the error message */
       }
       setError((e as Error).message);
-      setAttempt((n) => n + 1);
+      setClaiming(false);
     }
   };
 
@@ -53,67 +59,51 @@ export default function RewardPage() {
     }
   };
 
-  const UnlockedGift = () =>
-    isUnlocked ? (
-      <div className="mt-6 flex h-14 w-full items-center justify-between rounded-full bg-[#1DB954] p-2 text-white shadow-lg">
-        <div className="pl-3">
-          <p className="text-sm font-bold">Spotify Premium 1 Year!</p>
-          <p className="text-xs opacity-80">Reward claimed</p>
-        </div>
-        <div className="flex h-10 w-10 items-center justify-center rounded-full bg-white">
-          <SpotifyIcon className="h-6 w-6 text-[#1DB954]" />
-        </div>
+  const UnlockedGift = () => (
+    <button
+      type="button"
+      onClick={handleClaim}
+      disabled={claiming}
+      className="mt-6 flex h-14 w-full cursor-pointer items-center justify-between rounded-full border-0 bg-[#1DB954] p-2 text-left text-white shadow-lg transition-transform hover:scale-105 disabled:cursor-default disabled:hover:scale-100"
+    >
+      <div className="pl-3">
+        <p className="text-sm font-bold">1k Virtual Coins</p>
+        <p className="text-xs opacity-80">
+          {isClaimed ? 'Reward claimed' : claiming ? 'Claiming...' : 'Click to claim'}
+        </p>
       </div>
-    ) : (
-      <p className="mt-6 text-center text-sm text-muted-foreground">Claiming your reward...</p>
-    );
+      <div className="flex h-10 w-10 items-center justify-center rounded-full bg-white">
+        <SpotifyIcon className="h-6 w-6 text-[#1DB954]" />
+      </div>
+    </button>
+  );
 
   return (
     <div className="relative flex min-h-screen w-full items-center justify-center bg-background p-4">
       <button
         type="button"
         onClick={handleSignOut}
-        className="absolute right-4 top-4 text-sm text-muted-foreground underline underline-offset-4 hover:text-foreground"
+        className="absolute right-4 top-4 border-0 bg-transparent p-0 text-sm text-muted-foreground underline underline-offset-4 hover:text-foreground"
       >
         Sign out
       </button>
 
-      {isUnlocked && (
+      {isClaimed && (
         <Confetti width={width} height={height} recycle={false} numberOfPieces={500} gravity={0.1} />
-      )}
-
-      {state === 'loading' && null}
-
-      {state === 'claimed' && (
-        <div className="w-full max-w-xs rounded-2xl border bg-card p-6 text-center text-card-foreground shadow-sm">
-          <div className="mx-auto mb-4 flex h-24 w-24 items-center justify-center rounded-full bg-secondary">
-            <GiftIcon className="h-12 w-12 text-foreground/80" />
-          </div>
-          <h2 className="text-xl font-bold tracking-tight text-foreground">Reward already claimed</h2>
-          <p className="mt-2 text-sm text-muted-foreground">
-            Each Gmail account can claim this reward only once, and yours has been used.
-          </p>
-        </div>
       )}
 
       {state === 'available' && (
         <div className="w-full max-w-xs">
-          <SlideToUnlock
-            key={attempt}
-            onUnlock={handleUnlock}
-            unlockedContent={<UnlockedGift />}
-            shimmer={true}
-          >
+          <SlideToUnlock onUnlock={() => {}} unlockedContent={<UnlockedGift />} shimmer={true}>
             <div className="text-center">
               <div className="mx-auto mb-4 flex h-24 w-24 items-center justify-center rounded-full bg-secondary">
                 <GiftIcon className="h-12 w-12 text-foreground/80" />
               </div>
               <h2 className="text-xl font-bold tracking-tight text-foreground">
-                Happy birthday Sabba!
+                Welcome Trader
               </h2>
               <p className="mt-2 text-sm text-muted-foreground">
-                Wishing you all happiness, and blessings the world can offer on your
-                birthday. Open your gift below. Hope you like it!
+                Your investing journey starts today. Claim your virtual coins, explore real market data, and learn to invest without risking real money.
               </p>
             </div>
           </SlideToUnlock>
