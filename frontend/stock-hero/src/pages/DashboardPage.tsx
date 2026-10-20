@@ -1,9 +1,26 @@
+import * as React from "react";
 import { useNavigate } from "react-router-dom";
+import { Home, LineChart, Briefcase, GraduationCap } from "lucide-react";
+import { GlassmorphismNavBar } from "@/components/ui/glassmorphism-navigation";
 import { AppleStyleDock } from "@/components/apple-style-dock";
 import { api } from "@/lib/api";
 
+// Top navbar links (they are placeholders for now: set `url` when the pages exist)
+const navItems = [
+  { name: "Fixed Time", url: "#", icon: Home },
+  { name: "InZone", url: "#", icon: LineChart },
+  { name: "Forex", url: "#", icon: Briefcase },
+  { name: "Stocks", url: "#", icon: GraduationCap },
+];
+
 export default function DashboardPage() {
   const navigate = useNavigate();
+
+  // The navbar's theme toggle adds a "dark" class to the page. Remove it when leaving
+  // the dashboard so the other pages stay light.
+  React.useEffect(() => {
+    return () => document.documentElement.classList.remove("dark");
+  }, []);
 
   const handleSignOut = async () => {
     try {
@@ -14,8 +31,9 @@ export default function DashboardPage() {
   };
 
   return (
-    // relative + min-h-screen so the dock sits at the bottom of the screen
+    // relative + min-h-screen so the dock sits inside the page
     <div className="relative min-h-screen w-full bg-background">
+      <GlassmorphismNavBar items={navItems} defaultTheme="light" />
       <button
         type="button"
         onClick={handleSignOut}
