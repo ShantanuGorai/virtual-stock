@@ -31,5 +31,6 @@ export const api = {
   me: () => request<{ user: AuthUser }>("GET", "/auth/me"),
   logout: () => request<{ message: string }>("POST", "/auth/logout"),
   rewardStatus: () => request<{ claimed: boolean }>("GET", "/reward/status"),
-  claimReward: () => request<{ claimed: boolean }>("POST", "/reward/claim"),
+  claimReward: () => request<{ claimed: boolean; balance: number }>("POST", "/reward/claim"),
+  wallet: () => request<{ balance: number }>("GET", "/wallet"),
 };

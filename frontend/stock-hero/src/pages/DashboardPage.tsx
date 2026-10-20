@@ -1,8 +1,8 @@
-import * as React from "react";
 import { useNavigate } from "react-router-dom";
 import { Home, LineChart, Briefcase, GraduationCap } from "lucide-react";
 import { GlassmorphismNavBar } from "@/components/ui/glassmorphism-navigation";
 import { AppleStyleDock } from "@/components/apple-style-dock";
+import WalletBadge from "@/components/WalletBadge";
 import { api } from "@/lib/api";
 
 // Top navbar links (they are placeholders for now: set `url` when the pages exist)
@@ -16,12 +16,6 @@ const navItems = [
 export default function DashboardPage() {
   const navigate = useNavigate();
 
-  // The navbar's theme toggle adds a "dark" class to the page. Remove it when leaving
-  // the dashboard so the other pages stay light.
-  React.useEffect(() => {
-    return () => document.documentElement.classList.remove("dark");
-  }, []);
-
   const handleSignOut = async () => {
     try {
       await api.logout();
@@ -33,7 +27,7 @@ export default function DashboardPage() {
   return (
     // relative + min-h-screen so the dock sits inside the page
     <div className="relative min-h-screen w-full bg-background">
-      <GlassmorphismNavBar items={navItems} defaultTheme="light" />
+      <GlassmorphismNavBar items={navItems} defaultTheme="light" trailing={<WalletBadge />} />
       <button
         type="button"
         onClick={handleSignOut}

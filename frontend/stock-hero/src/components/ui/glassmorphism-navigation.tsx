@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { Home, User, Briefcase, FileText, Moon, Sun } from "lucide-react";
+import { Home, User, Briefcase, FileText } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface NavItem {
@@ -15,7 +15,8 @@ interface GlassmorphismNavBarProps {
   items?: NavItem[];
   className?: string;
   defaultTheme?: "light" | "dark";
-  onThemeChange?: (theme: "light" | "dark") => void;
+  /** Shown at the right end of the bar (for example the wallet balance). */
+  trailing?: React.ReactNode;
 }
 
 export function GlassmorphismNavBar({
@@ -27,12 +28,11 @@ export function GlassmorphismNavBar({
   ],
   className,
   defaultTheme = "light",
-  onThemeChange,
+  trailing,
 }: GlassmorphismNavBarProps) {
   const [activeTab, setActiveTab] = useState(items[0].name);
   const [isMobile, setIsMobile] = useState(false);
-  const [theme, setTheme] = useState<"light" | "dark">(defaultTheme);
-  const [isHovered, setIsHovered] = useState(false);
+  const theme = defaultTheme;
 
   useEffect(() => {
     const handleResize = () => {
@@ -43,22 +43,6 @@ export function GlassmorphismNavBar({
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
   }, []);
-
-  useEffect(() => {
-    if (typeof document !== "undefined") {
-      if (theme === "dark") {
-        document.documentElement.classList.add("dark");
-      } else {
-        document.documentElement.classList.remove("dark");
-      }
-    }
-  }, [theme]);
-
-  const toggleTheme = () => {
-    const newTheme = theme === "light" ? "dark" : "light";
-    setTheme(newTheme);
-    onThemeChange?.(newTheme);
-  };
 
   return (
     <div
@@ -147,41 +131,12 @@ export function GlassmorphismNavBar({
           );
         })}
 
-        <div className="w-px h-6 bg-border/50 mx-1" />
-
-        <button
-          onClick={toggleTheme}
-          onMouseEnter={() => setIsHovered(true)}
-          onMouseLeave={() => setIsHovered(false)}
-          className={cn(
-            "relative cursor-pointer p-2 rounded-full transition-all duration-300",
-            theme === "dark"
-              ? "text-foreground/70 hover:text-primary hover:bg-white/10"
-              : "text-foreground/80 hover:text-primary hover:bg-black/5"
-          )}
-          aria-label={
-            theme === "light" ? "Switch to dark mode" : "Switch to light mode"
-          }
-        >
-          <motion.div
-            initial={false}
-            animate={{
-              scale: isHovered ? 1.1 : 1,
-              rotate: theme === "dark" ? 180 : 0,
-            }}
-            transition={{
-              type: "spring",
-              stiffness: 200,
-              damping: 15,
-            }}
-          >
-            {theme === "light" ? (
-              <Moon size={18} strokeWidth={2.5} />
-            ) : (
-              <Sun size={18} strokeWidth={2.5} />
-            )}
-          </motion.div>
-        </button>
+        {trailing && (
+          <>
+            <div className="w-px h-6 bg-border/50 mx-1" />
+            <div className="pr-3">{trailing}</div>
+          </>
+        )}
       </div>
     </div>
   );
