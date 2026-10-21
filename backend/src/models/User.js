@@ -9,6 +9,8 @@ const userSchema = new mongoose.Schema(
     canonicalEmail: { type: String, unique: true, sparse: true },
     // Set once when the reward is claimed. null means not claimed yet.
     rewardClaimedAt: { type: Date, default: null },
+    // Wallet balance in minor units (100 = 1.00 coin). Missing on accounts older than wallets.
+    balanceMinor: { type: Number },
     passwordHash: { type: String, required: true },
     emailVerified: { type: Boolean, default: true },
   },

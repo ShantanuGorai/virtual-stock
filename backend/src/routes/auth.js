@@ -166,6 +166,7 @@ router.post(
         canonicalEmail: canonicalEmail(email),
         passwordHash: pending.passwordHash,
         emailVerified: true,
+        balanceMinor: 0,
       });
     } catch (err) {
       if (err.code === 11000) return res.status(409).json({ message: "An account with this email already exists. Sign in instead." });

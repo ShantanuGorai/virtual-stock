@@ -3,6 +3,7 @@ const cors = require("cors");
 const cookieParser = require("cookie-parser");
 const authRoutes = require("./routes/auth");
 const rewardRoutes = require("./routes/reward");
+const walletRoutes = require("./routes/wallet");
 
 const app = express();
 
@@ -13,6 +14,7 @@ app.use(cookieParser());
 app.get("/api/health", (req, res) => res.json({ ok: true }));
 app.use("/api/auth", authRoutes);
 app.use("/api/reward", rewardRoutes);
+app.use("/api/wallet", walletRoutes);
 
 app.use((req, res) => res.status(404).json({ message: "Not found." }));
 

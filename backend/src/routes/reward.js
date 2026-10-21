@@ -1,6 +1,7 @@
 const express = require("express");
 const User = require("../models/User");
 const requireAuth = require("../middleware/requireAuth");
+const { REWARD_MINOR, toUnits } = require("../config/wallet");
 
 const router = express.Router();
 router.use(requireAuth);
@@ -17,19 +18,16 @@ router.get(
   })
 );
 
-// POST /api/reward/claim
-// The update only matches while rewardClaimedAt is still null, so two requests at the same
-// time (two tabs, double click) can never both succeed. Each Gmail inbox has one account,
-// so each Gmail can claim the reward once.
 router.post(
   "/claim",
   wrap(async (req, res) => {
     const updated = await User.findOneAndUpdate(
       { _id: req.userId, rewardClaimedAt: null },
-      { $set: { rewardClaimedAt: new Date() } }
+      { $set: { rewardClaimedAt: new Date() }, $inc: { balanceMinor: REWARD_MINOR } },
+      { new: true }
     );
     if (!updated) return res.status(409).json({ message: "This reward has already been claimed for your Gmail account." });
-    res.json({ claimed: true });
+    res.json({ claimed: true, balance: toUnits(updated.balanceMinor) });
   })
 );
 
