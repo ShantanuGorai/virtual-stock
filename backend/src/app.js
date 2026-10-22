@@ -4,6 +4,7 @@ const cookieParser = require("cookie-parser");
 const authRoutes = require("./routes/auth");
 const rewardRoutes = require("./routes/reward");
 const walletRoutes = require("./routes/wallet");
+const marketRoutes = require("./routes/market");
 
 const app = express();
 
@@ -15,6 +16,7 @@ app.get("/api/health", (req, res) => res.json({ ok: true }));
 app.use("/api/auth", authRoutes);
 app.use("/api/reward", rewardRoutes);
 app.use("/api/wallet", walletRoutes);
+app.use("/api/market", marketRoutes);
 
 app.use((req, res) => res.status(404).json({ message: "Not found." }));
 

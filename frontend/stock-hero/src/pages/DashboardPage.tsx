@@ -3,6 +3,7 @@ import { Home, LineChart, Briefcase, GraduationCap } from "lucide-react";
 import { GlassmorphismNavBar } from "@/components/ui/glassmorphism-navigation";
 import { AppleStyleDock } from "@/components/apple-style-dock";
 import WalletBadge from "@/components/WalletBadge";
+import StockChartPanel from "@/components/StockChartPanel";
 import { api } from "@/lib/api";
 
 // Top navbar links (they are placeholders for now: set `url` when the pages exist)
@@ -36,6 +37,11 @@ export default function DashboardPage() {
         Sign out
       </button>
       <AppleStyleDock />
+
+      {/* Chart in the middle: padding keeps it clear of the navbar (top) and the dock (left) */}
+      <main className="mx-auto flex min-h-screen w-full max-w-5xl items-center justify-center px-6 pb-24 pt-28 md:pl-28 md:pb-10">
+        <StockChartPanel />
+      </main>
     </div>
   );
 }

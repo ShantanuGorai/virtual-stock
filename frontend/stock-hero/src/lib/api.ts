@@ -1,3 +1,23 @@
+export interface RawCandle {
+  t: number; // epoch ms
+  o: number;
+  h: number;
+  l: number;
+  c: number;
+  v: number; // shares traded
+}
+
+export interface MarketResponse {
+  symbol: string;
+  name: string;
+  currency: string;
+  exchange: string | null;
+  price: number;
+  marketTime: number; // epoch ms of the last real quote
+  stale?: boolean;
+  candles: RawCandle[];
+}
+
 export interface AuthUser {
   id: string;
   name: string;
@@ -32,5 +52,7 @@ export const api = {
   logout: () => request<{ message: string }>("POST", "/auth/logout"),
   rewardStatus: () => request<{ claimed: boolean }>("GET", "/reward/status"),
   claimReward: () => request<{ claimed: boolean; balance: number }>("POST", "/reward/claim"),
+  candles: (symbol: string, range: string) =>
+    request<MarketResponse>("GET", `/market/candles?symbol=${encodeURIComponent(symbol)}&range=${range}`),
   wallet: () => request<{ balance: number }>("GET", "/wallet"),
 };
