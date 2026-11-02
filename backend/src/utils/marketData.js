@@ -80,6 +80,11 @@ async function fetchFromProvider(symbol, { range, interval }) {
     currency: meta.currency || "USD",
     exchange: meta.fullExchangeName || meta.exchangeName || null,
     price,
+    previousClose: Number.isFinite(meta.chartPreviousClose)
+      ? meta.chartPreviousClose
+      : Number.isFinite(meta.previousClose)
+        ? meta.previousClose
+        : null,
     marketTime: (meta.regularMarketTime || 0) * 1000,
     candles,
   };
@@ -104,4 +109,46 @@ async function getCandles(symbol, rangeKey) {
   }
 }
 
-module.exports = { getCandles, RANGES };
+// ---------- quotes (price + change since the previous close) for the stock picker ----------
+const QUOTE_TTL = 30000;
+const QUOTE_BATCH_LIMIT = 40;
+
+async function getQuote(symbol) {
+  if (!SYMBOL_RE.test(symbol)) return null;
+  const key = `${symbol}|Q`;
+  const hit = cache.get(key);
+  if (hit && Date.now() - hit.at < QUOTE_TTL) return hit.data;
+  try {
+    const d = await fetchFromProvider(symbol, { range: "1d", interval: "1d" });
+    const prev = Number.isFinite(d.previousClose) && d.previousClose > 0 ? d.previousClose : null;
+    const data = {
+      price: d.price,
+      previousClose: prev,
+      changePct: prev ? ((d.price - prev) / prev) * 100 : null,
+      marketTime: d.marketTime,
+    };
+    cache.set(key, { at: Date.now(), data });
+    return data;
+  } catch {
+    // one failing symbol must not break the whole list: use old data if we have it, else skip it
+    return hit && Date.now() - hit.at < STALE_OK_MS ? hit.data : null;
+  }
+}
+
+// Looks up many symbols, six at a time so we stay polite to the provider.
+async function getQuotes(symbols) {
+  const list = symbols.slice(0, QUOTE_BATCH_LIMIT);
+  const out = {};
+  let next = 0;
+  const worker = async () => {
+    while (next < list.length) {
+      const sym = list[next++];
+      const q = await getQuote(sym);
+      if (q) out[sym] = q;
+    }
+  };
+  await Promise.all(Array.from({ length: Math.min(6, list.length) }, worker));
+  return out;
+}
+
+module.exports = { getCandles, getQuotes, RANGES, QUOTE_BATCH_LIMIT };

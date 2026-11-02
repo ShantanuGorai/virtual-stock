@@ -18,6 +18,12 @@ export interface MarketResponse {
   candles: RawCandle[];
 }
 
+export interface Quote {
+  price: number;
+  previousClose: number | null;
+  changePct: number | null; // change since the previous close, in percent
+}
+
 export interface AuthUser {
   id: string;
   name: string;
@@ -54,5 +60,7 @@ export const api = {
   claimReward: () => request<{ claimed: boolean; balance: number }>("POST", "/reward/claim"),
   candles: (symbol: string, range: string) =>
     request<MarketResponse>("GET", `/market/candles?symbol=${encodeURIComponent(symbol)}&range=${range}`),
+  quotes: (symbols: string[]) =>
+    request<{ quotes: Record<string, Quote> }>("GET", `/market/quotes?symbols=${encodeURIComponent(symbols.join(","))}`),
   wallet: () => request<{ balance: number }>("GET", "/wallet"),
 };

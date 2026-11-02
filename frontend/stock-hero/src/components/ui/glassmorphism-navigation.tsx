@@ -47,13 +47,13 @@ export function GlassmorphismNavBar({
   return (
     <div
       className={cn(
-        "fixed bottom-0 sm:top-0 left-1/2 -translate-x-1/2 z-50 mb-6 sm:pt-6",
+        "pointer-events-none fixed bottom-0 sm:bottom-auto sm:top-0 left-1/2 -translate-x-1/2 z-50 mb-6 sm:mb-0 sm:pt-6",
         className
       )}
     >
       <div
         className={cn(
-          "flex items-center gap-3 py-1 px-1 rounded-full shadow-lg transition-all duration-300",
+          "pointer-events-auto flex items-center gap-3 py-1 px-1 rounded-full shadow-lg transition-all duration-300",
           theme === "dark"
             ? "bg-background/40 border border-white/10 backdrop-blur-xl"
             : "bg-background/30 border border-black/5 backdrop-blur-xl"

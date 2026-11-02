@@ -1,17 +1,9 @@
 import * as React from "react";
 import CandleChart, { TIMEFRAMES } from "@/components/ui/candle-chart";
 import { useStockCandles, useLiveTicks } from "@/lib/useStockCandles";
-import { cn } from "@/lib/utils";
+import StockPicker from "@/components/StockPicker";
 
 type Range = (typeof TIMEFRAMES)[number];
-
-const SYMBOLS = [
-  { symbol: "AAPL", name: "Apple" },
-  { symbol: "MSFT", name: "Microsoft" },
-  { symbol: "GOOGL", name: "Alphabet" },
-  { symbol: "AMZN", name: "Amazon" },
-  { symbol: "TSLA", name: "Tesla" },
-];
 
 const money = (n: number) => `$${n.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 
@@ -41,24 +33,8 @@ export default function StockChartPanel() {
 
   return (
     <div className="w-full rounded-2xl border bg-card p-5 text-card-foreground shadow-sm">
-      <div className="mb-4 flex flex-wrap items-center gap-2">
-        {SYMBOLS.map((s) => (
-          <button
-            key={s.symbol}
-            type="button"
-            onClick={() => setSymbol(s.symbol)}
-            aria-pressed={symbol === s.symbol}
-            className={cn(
-              "rounded-full border px-3 py-1 text-xs font-medium transition-colors",
-              symbol === s.symbol
-                ? "border-foreground bg-foreground text-background"
-                : "border-border bg-transparent text-foreground/70 hover:bg-muted"
-            )}
-          >
-            {s.symbol}
-            <span className="ml-1.5 hidden opacity-60 sm:inline">{s.name}</span>
-          </button>
-        ))}
+      <div className="mb-4">
+        <StockPicker value={symbol} onChange={setSymbol} />
       </div>
 
       <div className="h-[440px] w-full">

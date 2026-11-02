@@ -1,7 +1,7 @@
 const express = require("express");
 const rateLimit = require("express-rate-limit");
 const requireAuth = require("../middleware/requireAuth");
-const { getCandles } = require("../utils/marketData");
+const { getCandles, getQuotes, QUOTE_BATCH_LIMIT } = require("../utils/marketData");
 
 const router = express.Router();
 router.use(requireAuth);
@@ -24,6 +24,24 @@ router.get(
     const symbol = String(req.query.symbol || "AAPL").trim().toUpperCase();
     const range = String(req.query.range || "1D").trim().toUpperCase();
     res.json(await getCandles(symbol, range));
+  })
+);
+
+// GET /api/market/quotes?symbols=AAPL,MSFT,...  -> { quotes: { AAPL: { price, previousClose, changePct } } }
+// Symbols the provider can not find are simply left out of the answer.
+router.get(
+  "/quotes",
+  wrap(async (req, res) => {
+    const symbols = [
+      ...new Set(
+        String(req.query.symbols || "")
+          .split(",")
+          .map((s) => s.trim().toUpperCase())
+          .filter((s) => /^[A-Z0-9.\-^]{1,12}$/.test(s))
+      ),
+    ].slice(0, QUOTE_BATCH_LIMIT);
+    if (!symbols.length) return res.status(400).json({ message: "Give at least one stock symbol." });
+    res.json({ quotes: await getQuotes(symbols) });
   })
 );
 
